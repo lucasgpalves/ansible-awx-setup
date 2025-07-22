@@ -21,7 +21,7 @@ Esse repositório é para relatar a minha experiência na implantação do AWX O
 Segui as documentações das tecnologias para realizar a instalação.
 
 ### Docker
-![Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
+[Docker](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 ``` bash
 # Add Docker's official GPG key:
 sudo apt-get update
@@ -50,20 +50,20 @@ docker compose version
 > Entendi que não é necessário a instalação de todos os plugins, porém decidi fazer mesmo assim, simplificando o processo.
 
 ### Minikube
-![Minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fdebian+package)
+[Minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fdebian+package)
 ``` bash
 curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
 sudo dpkg -i minikube_latest_amd64.deb
 ```
 
 ### Helm
-![Helm](https://helm.sh/docs/intro/install/#from-snap)
+[Helm](https://helm.sh/docs/intro/install/#from-snap)
 ``` bash
 sudo snap install helm --classic
 ```
 
 ### AWX Operator
-![AWX Operator](https://ansible-community.github.io/awx-operator-helm/)
+[AWX Operator](https://ansible-community.github.io/awx-operator-helm/)
 ``` bash
 helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm/
 helm install ansible-awx-operator awx-operator/awx-operator -n awx --create-namespace
