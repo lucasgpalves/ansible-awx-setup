@@ -69,6 +69,54 @@ helm repo add awx-operator https://ansible-community.github.io/awx-operator-helm
 helm install ansible-awx-operator awx-operator/awx-operator -n awx --create-namespace
 ```
 
+## Comandos
+``` bash
+kubectl get secret ansible-awx-admin-password -o jsonpath="{.data.password}" -n awx | base64 --decode ; echo
+```
+
+## Processo
+Tive alguns problemas para interpretar os arquivos yaml de configuração dos pods, pois eu não entendia a arquitetura e funcionamento da tecnologia. Logo, fui a busca de conhecimento.
+
+Procurei artigos no Medium e vídeos no Youtube e consultas a mecanismos de IA generativa (ChatGPT e Copilot) para ter uma direção, o principal que tiver referencia foi o [Video](https://youtu.be/ftEiEfCk-PQ?si=_S3IB0Itw2yzXuur) e o [Artigo Medium](https://medium.com/@pavankumar.tadakaluru/setting-up-awx-ansible-opensource-ui-on-kubernetes-0e3936ec7bd4) como base. Eu já tenho noções de como funciona o Docker (Uso de Dockerfile, docker-compose, e comandos docker), redes e noção de IaC (Terraform Azure e AWS).
+
+> Poderia ter lido a documentação, mas ir para a prática primeiro ajuda a ter uma visualização melhor do processo, irei me aprofudar posteriormente
+
+### Criação da máquina virtual
+Utilizei o VirtualBox Machine e configurei ela como na [Configurações da VM](./README.md#configurações-da-vm), sinto que preciso comprar realmente uma máquina mais potente para meus homelabs.
+
+### VSCode RemoteHost
+Na minha máquina Host, sendo possível fazer modificações de forma mais simplificada nos arquivos e rodar os comandos.
+
+### Criando o PersistentVolume
+Pelo o que compreendi, é um espaço que será reservado na VM para que os pods do cluster possam compartilhar dados. Reservando uma quantidade de espaço, quais são as ações que podem ser feitas e declarando onde será este espaço.
+``` yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  namespace: awx
+spec:
+  capacity:
+    storage: 10Gi                         # Aqui é informado a quantidade de armazenamento
+  accessModes: ReadWriteOnce              # Neste caso é apenas escrita e leitura, não executando
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  hostPath:
+    path: /mnt/storage                   # Interpretei que isso seria o similar dos volumes no docker
+```
+
+### Criando o StorageClass
+Entendo que é como se eu estivesse criando perfis diferentes, exemplo: Banco master e um slave, onde diferentes pods, terão bases semelhantes, porém podem comportar dados de formas diferentes.
+``` yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+  namespace: awx
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+```
+
 ## Conclusão
 
 Pude aprender como analisar logs de pods do K8s, como funciona a declaração de arquivos .yaml, além de comandos fundamentais (delete, get, describe) e com uma base de Kubernetes, algo o qual sempre procurei ter, parece ser mais simples do que eu imaginava, quando eu for fazer projetos mais complexos, conseguirei ter uma visão melhor sobre o que devo fazer.
@@ -114,7 +162,7 @@ Quando eu tentei realizar a conexão via navegador do meu host, rodei os comando
 Ao tentar realizar a conexão, utilizando o endereço `http://<IP-GUEST>:<WEB-PORT>` não exibiu e deu erro de proxy, 
 Em conversa com um colega, ele me explicou o seguinte, como não foi feito a instância do Ingress não seria possível acessar na minha máquina Host, tive que rodar o comando: 
 ``` bash
-kubectl port-foward pod/ansible-awx-web <SVC-PORT>:8080 
+kubectl port-foward -n awx avc/ansible-awx-service 8080:80 
 ```
 Para acessar a aplicação pelo url `http://localhost:8080`
 
