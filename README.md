@@ -87,6 +87,23 @@ Utilizei o VirtualBox Machine e configurei ela como na [Configurações da VM](.
 ### VSCode RemoteHost
 Na minha máquina Host, sendo possível fazer modificações de forma mais simplificada nos arquivos e rodar os comandos.
 
+### Criando o StorageClass
+Entendo que é como se eu estivesse criando perfis diferentes, exemplo: Banco master e um slave, onde diferentes pods, terão bases semelhantes, porém podem comportar dados de formas diferentes.
+``` yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-storage
+  namespace: awx
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+```
+
+E rodei o comando:
+``` bash
+kubectl apply -f awxstorage-class.yaml
+```
+
 ### Criando o PersistentVolume
 Pelo o que compreendi, é um espaço que será reservado na VM para que os pods do cluster possam compartilhar dados. Reservando uma quantidade de espaço, quais são as ações que podem ser feitas e declarando onde será este espaço.
 ``` yaml
@@ -105,17 +122,36 @@ spec:
     path: /mnt/storage                   # Interpretei que isso seria o similar dos volumes no docker
 ```
 
-### Criando o StorageClass
-Entendo que é como se eu estivesse criando perfis diferentes, exemplo: Banco master e um slave, onde diferentes pods, terão bases semelhantes, porém podem comportar dados de formas diferentes.
-``` yaml
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: local-storage
-  namespace: awx
-provisioner: kubernetes.io/no-provisioner
-volumeBindingMode: WaitForFirstConsumer
+E rodei o comando:
+``` bash
+kubectl apply -f awx-pv.yaml
 ```
+
+### Fazendo deploy do AnsibleAWX
+Neste passo, comprendo que este é o meu arquivo que terá os componentes necessários para o meu serviço, a página web, o banco interno que usa (Postgres), ele é como se fosse um docker compose que compõe minha aplicação que o Cluster vai gerenciar. Minha aplicação não subiu de primeira, lá vou eu fazer meus [Troubleshooting](#troubleshooting)
+```yaml
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: ansible-awx
+  namespace: awx
+spec:
+  service_type: nodeport
+  postgres_storage_class: local-storage
+```
+
+E rodei o comando:
+``` bash
+kubectl apply -f ansible-awx.yaml
+```
+
+### Deploy Concluído
+
+![kubectl-get-all](./public/images/get-all-awx.png)
+
+![web-page](./public/images/login.png)
+
+![version-awx](./public/images/version.png)
 
 ## Conclusão
 
@@ -123,7 +159,7 @@ Pude aprender como analisar logs de pods do K8s, como funciona a declaração de
 
 Percebi o impacto de você ter menos recurso do que o necessário para implantar um sistema, como isso pode trazer dores de cabeça. Contudo, foi bem construtivo o conhecimento que pude ter com estes problemas que podem ocorrer.
 
-## Troubleshotting
+## Troubleshooting
 Estarei aqui relatando as experiências que tive, durante a implantação do AWX Operator, descrevendo o problema que tive, minha percepção sobre o problema e como solucionei.
 
 ### Docker version
